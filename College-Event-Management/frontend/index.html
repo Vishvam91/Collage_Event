@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARUSAT Event Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        
+        .header { background: #2c3e50; color: white; padding: 1rem 0; }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .nav { display: flex; gap: 20px; }
+        .nav button { background: none; border: none; color: white; cursor: pointer; padding: 8px 16px; border-radius: 4px; }
+        .nav button:hover { background: #34495e; }
+        .nav button.active { background: #3498db; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .auth-container { max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .auth-tabs { display: flex; margin-bottom: 20px; }
+        .auth-tab { flex: 1; padding: 10px; background: #ecf0f1; border: none; cursor: pointer; }
+        .auth-tab.active { background: #3498db; color: white; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .btn { padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #219a52; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .event-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .event-card h3 { color: #2c3e50; margin-bottom: 10px; }
+        .event-meta { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 10px; }
+        .event-category { display: inline-block; background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 10px; }
+        
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #3498db; }
+        .stat-label { color: #7f8c8d; margin-top: 5px; }
+        
+        .alert { padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .hidden { display: none; }
+        .user-info { color: white; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">CHARUSAT Events</div>
+            <nav class="nav">
+                <button onclick="showPage('home')" class="nav-btn active">Home</button>
+                <button onclick="showPage('events')" class="nav-btn">Events</button>
+                <button onclick="showPage('dashboard')" class="nav-btn" id="dashboardBtn" style="display:none;">Dashboard</button>
+                <button onclick="showPage('create-event')" class="nav-btn" id="createEventBtn" style="display:none;">Create Event</button>
+                <button onclick="logout()" class="nav-btn" id="logoutBtn" style="display:none;">Logout</button>
+            </nav>
+            <div class="user-info" id="userInfo" style="display:none;"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Home/Login Page -->
+        <div id="home" class="page active">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <h2>Student/Staff Login</h2>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password">
+                    </div>
+                    <button class="btn" onclick="loginUser()">Login</button>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" style="display:none;">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" placeholder="Create a password">
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="regRole" onchange="toggleStudentFields()">
+                            <option value="student">Student</option>
+                            <option value="organizer">Event Organizer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div id="studentFields">
+                        <div class="form-group">
+                            <label>Student ID</label>
+                            <input type="text" id="regStudentId" placeholder="Enter your student ID">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <select id="regDepartment">
+                                <option value="CSE">Computer Science and Engineering (CSE)</option>
+                                <option value="CE">Computer Engineering (CE)</option>
+                                <option value="IT">Information Technology (IT)</option>
+                                <option value="AIML">Artificial Intelligence and Machine Learning (AIML)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Year</label>
+                            <select id="regYear">
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="registerUser()">Register</button>
+                </div>
+
+                <div id="authAlert"></div>
+            </div>
+        </div>
+
+        <!-- Events Page -->
+        <div id="events" class="page">
+            <h1>College Events</h1>
+            <div class="form-group" style="max-width: 300px;">
+                <select id="categoryFilter" onchange="filterEvents()">
+                    <option value="all">All Categories</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Hackathon">Hackathon</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div id="eventsContainer" class="events-grid"></div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page">
+            <h1>Dashboard</h1>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="registeredEvents">0</div>
+                    <div class="stat-label" id="registeredEventsLabel">My Registrations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="upcomingEvents">0</div>
+                    <div class="stat-label">Active Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pastEvents">0</div>
+                    <div class="stat-label">Past Events</div>
+                </div>
+            </div>
+            
+            <!-- Student Events -->
+            <div id="studentEventsSection">
+                <h2>My Active Events</h2>
+                <div id="myActiveEventsContainer" class="events-grid"></div>
+                
+                <h2 style="margin-top: 40px;">Past Events</h2>
+                <div id="myPastEventsContainer" class="events-grid"></div>
+            </div>
+
+            <!-- Organizer Events -->
+            <div id="organizerEventsSection" style="display:none;">
+                <h2>Active Events</h2>
+                <div id="myActiveOrganizedEventsContainer" class="events-grid"></div>
+                
+                <h2 style="margin-top: 40px;">Past Events</h2>
+                <div id="myPastOrganizedEventsContainer" class="events-grid"></div>
+            </div>
+        </div>
+
+        <!-- Create Event Page -->
+        <div id="create-event" class="page">
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h1>Create New Event</h1>
+                <div class="form-group">
+                    <label>Event Title</label>
+                    <input type="text" id="eventTitle" placeholder="Enter event title">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="eventDescription" rows="4" placeholder="Enter event description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="eventCategory">
+                        <option value="Cultural">Cultural</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="eventDate">
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="eventTime">
+                </div>
+                <div class="form-group">
+                    <label>Venue</label>
+                    <input type="text" id="eventVenue" placeholder="Enter venue">
+                </div>
+                <div class="form-group">
+                    <label>Eligibility</label>
+                    <input type="text" id="eventEligibility" placeholder="Who can participate?" value="All students">
+                </div>
+                <div class="form-group">
+                    <label>Seat Limit</label>
+                    <input type="number" id="eventSeatLimit" placeholder="Maximum participants">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="isTeamEvent" onchange="toggleTeamFields()">
+                        Team Event
+                    </label>
+                    <small style="color: #666;">Check if this is a team-based event</small>
+                </div>
+                <div class="form-group" id="teamSizeGroup" style="display: none;">
+                    <label>Team Size</label>
+                    <input type="number" id="teamSize" placeholder="Number of members per team" min="2" max="10" value="2">
+                    <small style="color: #666;">Number of students per team (2-10)</small>
+                </div>
+                <div class="form-group">
+                    <label>Event Image</label>
+                    <input type="file" id="eventImage" accept="image/*">
+                    <small style="color: #666;">Upload an image file (JPG, PNG, GIF). Max size: 5MB</small>
+                </div>
+                <button class="btn" onclick="createNewEvent()">Create Event</button>
+                <div id="createEventAlert"></div>
+            </div>
+        </div>
+
+        <!-- Edit Event Page -->
+        <div id="edit-event" class="page">
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h1>Edit Event</h1>
+                <input type="hidden" id="editEventId">
+                <div class="form-group">
+                    <label>Event Title</label>
+                    <input type="text" id="editEventTitle" placeholder="Enter event title">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editEventDescription" rows="4" placeholder="Enter event description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="editEventCategory">
+                        <option value="Cultural">Cultural</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="editEventDate">
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="editEventTime">
+                </div>
+                <div class="form-group">
+                    <label>Venue</label>
+                    <input type="text" id="editEventVenue" placeholder="Enter venue">
+                </div>
+                <div class="form-group">
+                    <label>Eligibility</label>
+                    <input type="text" id="editEventEligibility" placeholder="Who can participate?">
+                </div>
+                <div class="form-group">
+                    <label>Seat Limit</label>
+                    <input type="number" id="editEventSeatLimit" placeholder="Maximum participants">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editIsTeamEvent" onchange="toggleEditTeamFields()">
+                        Team Event
+                    </label>
+                    <small style="color: #666;">Check if this is a team-based event</small>
+                </div>
+                <div class="form-group" id="editTeamSizeGroup" style="display: none;">
+                    <label>Team Size</label>
+                    <input type="number" id="editTeamSize" placeholder="Number of members per team" min="2" max="10" value="2">
+                    <small style="color: #666;">Number of students per team (2-10)</small>
+                </div>
+                <div class="form-group">
+                    <label>Event Image</label>
+                    <input type="file" id="editEventImage" accept="image/*">
+                    <small style="color: #666;">Upload new image file (JPG, PNG, GIF). Max size: 5MB. Leave empty to keep current image.</small>
+                </div>
+                <button class="btn" onclick="updateEvent()">Update Event</button>
+                <button class="btn" onclick="showPage('dashboard')" style="background: #6c757d;">Cancel</button>
+                <div id="editEventAlert"></div>
+            </div>
+        </div>
+
+        <!-- Event Registrations Page -->
+        <div id="event-registrations" class="page">
+            <div style="max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1 id="registrationsEventTitle">Event Registrations</h1>
+                    <button class="btn" onclick="showPage('dashboard')" style="background: #6c757d;">Back to Dashboard</button>
+                </div>
+                <div id="registrationsStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;"></div>
+                <div id="registrationsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Event Feedback Page -->
+        <div id="event-feedback" class="page">
+            <div style="max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1 id="feedbackEventTitle">Event Feedback</h1>
+                    <button class="btn" onclick="showPage('dashboard')" style="background: #6c757d;">Back to Dashboard</button>
+                </div>
+                <div id="feedbackStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;"></div>
+                <div id="feedbackContainer"></div>
+            </div>
+        </div>
+
+        <!-- Submit Feedback Page -->
+        <div id="submit-feedback" class="page">
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h1 id="submitFeedbackEventTitle">Submit Feedback</h1>
+                <div id="submitFeedbackEventDetails" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;"></div>
+                
+                <div class="form-group">
+                    <label>Rating (1-5 stars)</label>
+                    <div style="display: flex; gap: 10px; margin: 10px 0;">
+                        <label><input type="radio" name="rating" value="1"> ⭐ (Poor)</label>
+                        <label><input type="radio" name="rating" value="2"> ⭐⭐ (Fair)</label>
+                        <label><input type="radio" name="rating" value="3"> ⭐⭐⭐ (Good)</label>
+                        <label><input type="radio" name="rating" value="4"> ⭐⭐⭐⭐ (Very Good)</label>
+                        <label><input type="radio" name="rating" value="5"> ⭐⭐⭐⭐⭐ (Excellent)</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Your Feedback</label>
+                    <textarea id="feedbackComment" placeholder="Share your experience, what you liked, suggestions for improvement..." style="height: 120px; resize: vertical;"></textarea>
+                </div>
+                
+                <button class="btn" onclick="submitEventFeedback()">Submit Feedback</button>
+                <button class="btn" onclick="showPage('dashboard')" style="background: #6c757d; margin-left: 10px;">Cancel</button>
+                <div id="submitFeedbackAlert"></div>
+            </div>
+        </div>
+
+        <!-- Team Registration Modal -->
+        <div id="teamRegistrationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 600px; width: 90%;">
+                <h2 id="teamModalEventTitle">Register Team for Event</h2>
+                <div id="teamModalEventInfo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;"></div>
+                
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" id="teamName" placeholder="Enter your team name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Team Members' Email Addresses</label>
+                    <small style="color: #666; display: block; margin-bottom: 10px;">
+                        Enter the email addresses of your team members (excluding yourself as team leader). 
+                        All members must be registered on the platform.
+                    </small>
+                    <div id="memberEmailsContainer">
+                        <!-- Email inputs will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="submitTeamRegistration()">Register Team</button>
+                    <button class="btn" onclick="closeTeamRegistrationModal()" style="background: #6c757d;">Cancel</button>
+                </div>
+                <div id="teamRegistrationAlert"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let authToken = localStorage.getItem('token') || '';
+        let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        let allEvents = [];
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // Add global error handler
+            window.addEventListener('error', function(e) {
+                console.error('Global error:', e.error);
+                console.error('Error details:', e.message, 'at', e.filename, ':', e.lineno);
+            });
+            
+            if (authToken && currentUser.id) {
+                setupLoggedInUser();
+                showPage('events');
+            }
+            loadEvents();
+        });
+
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            
+            // Find and activate the correct nav button
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(pageId) || 
+                    (pageId === 'home' && btn.textContent === 'Home') ||
+                    (pageId === 'events' && btn.textContent === 'Events') ||
+                    (pageId === 'dashboard' && btn.textContent === 'Dashboard') ||
+                    (pageId === 'create-event' && btn.textContent === 'Create Event')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            if (pageId === 'events') loadEvents();
+            if (pageId === 'dashboard') loadDashboard();
+        }
+
+        // Auth Tab Switching
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+
+        // Toggle student fields based on role
+        function toggleStudentFields() {
+            const role = document.getElementById('regRole').value;
+            const studentFields = document.getElementById('studentFields');
+            studentFields.style.display = role === 'student' ? 'block' : 'none';
+        }
+
+        // Setup UI for logged in user
+        function setupLoggedInUser() {
+            console.log('Setting up logged in user:', currentUser);
+            
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userInfo').innerHTML = `Welcome, ${currentUser.name} (${currentUser.role})`;
+            
+            document.getElementById('dashboardBtn').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'block';
+            
+            console.log('User role:', currentUser.role);
+            if (currentUser.role === 'organizer' || currentUser.role === 'admin') {
+                console.log('Showing create event button for organizer/admin');
+                document.getElementById('createEventBtn').style.display = 'block';
+            } else {
+                console.log('Not showing create event button - user is not organizer/admin');
+            }
+        }
+
+        // Show alerts
+        function showAlert(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
+
+        // Register User
+        async function registerUser() {
+            const role = document.getElementById('regRole').value;
+            const data = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                role: role
+            };
+
+            if (role === 'student') {
+                data.studentId = document.getElementById('regStudentId').value;
+                data.department = document.getElementById('regDepartment').value;
+                data.year = parseInt(document.getElementById('regYear').value);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    currentUser = result.user;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    
+                    setupLoggedInUser();
+                    showPage('events');
+                    showAlert('authAlert', 'Registration successful!');
+                } else {
+                    showAlert('authAlert', result.message, true);
+                }
+            } catch (error) {
+                showAlert('authAlert', 'Registration failed. Please try again.', true);
+            }
+        }
+
+        // Login User
+        async function loginUser() {
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    currentUser = result.user;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    
+                    setupLoggedInUser();
+                    showPage('events');
+                    showAlert('authAlert', 'Login successful!');
+                } else {
+                    showAlert('authAlert', result.message, true);
+                }
+            } catch (error) {
+                showAlert('authAlert', 'Login failed. Please try again.', true);
+            }
+        }
+
+        // Logout
+        function logout() {
+            authToken = '';
+            currentUser = {};
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('dashboardBtn').style.display = 'none';
+            document.getElementById('createEventBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            
+            showPage('home');
+        }
+
+        // Load Events
+        async function loadEvents() {
+            try {
+                const response = await fetch(`${API_BASE}/events`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    allEvents = result.events;
+                    displayEvents(allEvents);
+                }
+            } catch (error) {
+                console.error('Failed to load events:', error);
+            }
+        }
+
+        // Display Events
+        function displayEvents(events) {
+            const container = document.getElementById('eventsContainer');
+            
+            if (events.length === 0) {
+                container.innerHTML = '<p>No events found.</p>';
+                return;
+            }
+            
+            container.innerHTML = events.map(event => `
+                <div class="event-card">
+                    <div class="event-category">${event.category}</div>
+                    <h3>${event.title}</h3>
+                    ${event.imageUrl ? `<img src="http://localhost:5000${event.imageUrl}" alt="${event.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin: 10px 0;">` : ''}
+                    <div class="event-meta">
+                        📅 ${new Date(event.date).toLocaleDateString()} at ${event.time}<br>
+                        📍 ${event.venue}<br>
+                        ${event.isTeamEvent ? `
+                            👥 ${event.teams ? event.teams.length : 0}/${event.seatLimit} teams registered<br>
+                            🪑 ${event.seatLimit - (event.teams ? event.teams.length : 0)} team slots remaining<br>
+                            👫 Team Size: ${event.teamSize} members per team<br>
+                        ` : `
+                            👥 ${event.registeredStudents.length}/${event.seatLimit} registered<br>
+                            🪑 ${event.seatLimit - event.registeredStudents.length} seats remaining<br>
+                        `}
+                        ✅ ${event.eligibility}<br>
+                        🔄 Status: <span style="color: ${event.status === 'completed' ? '#28a745' : event.status === 'registration-closed' ? '#ffc107' : '#007bff'}; font-weight: bold;">
+                            ${event.status === 'completed' ? 'Completed' : 
+                              event.status === 'registration-closed' ? 'Registration Closed' : 
+                              'Open for Registration'}
+                        </span>
+                    </div>
+                    <p>${event.description}</p>
+                    ${currentUser.role === 'student' ? `
+                        ${event.status === 'completed' ? `
+                            ${event.registeredStudents.some(s => s._id === currentUser.id) ? `
+                                <button class="btn" style="background: #28a745;" onclick="showFeedbackForm('${event._id}', '${event.title}')">
+                                    Submit Feedback
+                                </button>
+                            ` : `
+                                <button class="btn" style="background: #6c757d; cursor: not-allowed;" disabled>
+                                    Event Completed
+                                </button>
+                            `}
+                        ` : event.status === 'registration-closed' ? `
+                            ${event.registeredStudents.some(s => s._id === currentUser.id) ? `
+                                <button class="btn" style="background: #ffc107; color: #212529; cursor: not-allowed;" disabled>
+                                    Registration Closed - You're Registered
+                                </button>
+                            ` : `
+                                <button class="btn" style="background: #6c757d; cursor: not-allowed;" disabled>
+                                    Registration Closed
+                                </button>
+                            `}
+                        ` : `
+                            ${event.isTeamEvent ? `
+                                ${(event.teams ? event.teams.length : 0) < event.seatLimit ? `
+                                    ${event.registeredStudents.some(s => s._id === currentUser.id) ? `
+                                        <button class="btn btn-danger" onclick="unregisterFromTeamEvent('${event._id}')">
+                                            Leave Team
+                                        </button>
+                                    ` : `
+                                        <button class="btn btn-success" onclick="showTeamRegistrationForm('${event._id}', '${event.title}', ${event.teamSize})">
+                                            Register Team
+                                        </button>
+                                    `}
+                                ` : `
+                                    ${event.registeredStudents.some(s => s._id === currentUser.id) ? `
+                                        <button class="btn btn-danger" onclick="unregisterFromTeamEvent('${event._id}')">
+                                            Leave Team
+                                        </button>
+                                    ` : `
+                                        <button class="btn" style="background: #6c757d; cursor: not-allowed;" disabled>
+                                            Event Full
+                                        </button>
+                                    `}
+                                `}
+                            ` : `
+                                ${event.seatLimit - event.registeredStudents.length > 0 ? `
+                                    <button class="btn ${event.registeredStudents.some(s => s._id === currentUser.id) ? 'btn-danger' : 'btn-success'}" 
+                                            onclick="${event.registeredStudents.some(s => s._id === currentUser.id) ? 'unregisterFromEvent' : 'registerForEvent'}('${event._id}')">
+                                        ${event.registeredStudents.some(s => s._id === currentUser.id) ? 'Unregister' : 'Register Now'}
+                                    </button>
+                                ` : `
+                                    ${event.registeredStudents.some(s => s._id === currentUser.id) ? `
+                                        <button class="btn btn-danger" onclick="unregisterFromEvent('${event._id}')">
+                                            Unregister
+                                        </button>
+                                    ` : `
+                                        <button class="btn" style="background: #6c757d; cursor: not-allowed;" disabled>
+                                            Event Full
+                                        </button>
+                                    `}
+                                `}
+                            `}
+                        `}
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Filter Events
+        function filterEvents() {
+            const category = document.getElementById('categoryFilter').value;
+            const filtered = category === 'all' ? allEvents : allEvents.filter(e => e.category === category);
+            displayEvents(filtered);
+        }
+
+        // Register for Event
+        async function registerForEvent(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            // Find the event to show confirmation
+            const event = allEvents.find(e => e._id === eventId);
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            // Show confirmation dialog
+            const confirmMessage = `Are you sure you want to register for "${event.title}"?\n\n` +
+                                 `Date: ${new Date(event.date).toLocaleDateString()}\n` +
+                                 `Time: ${event.time}\n` +
+                                 `Venue: ${event.venue}\n` +
+                                 `Seats remaining: ${event.seatLimit - event.registeredStudents.length}`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/register`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    loadEvents(); // Refresh events
+                    alert('Successfully registered for event!');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Registration failed. Please try again.');
+            }
+        }
+
+        // Unregister from Event
+        async function unregisterFromEvent(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/unregister`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    loadEvents(); // Refresh events
+                    alert('Successfully unregistered from event!');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Unregistration failed. Please try again.');
+            }
+        }
+
+        // Toggle team fields
+        function toggleTeamFields() {
+            const checkbox = document.getElementById('isTeamEvent');
+            const teamSizeGroup = document.getElementById('teamSizeGroup');
+            teamSizeGroup.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        function toggleEditTeamFields() {
+            const checkbox = document.getElementById('editIsTeamEvent');
+            const teamSizeGroup = document.getElementById('editTeamSizeGroup');
+            teamSizeGroup.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        // Create Event
+        async function createNewEvent() {
+            console.log('createEvent function called');
+            console.log('authToken:', authToken);
+            console.log('currentUser:', currentUser);
+            
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            // Validate required fields
+            const title = document.getElementById('eventTitle').value.trim();
+            const description = document.getElementById('eventDescription').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const venue = document.getElementById('eventVenue').value.trim();
+            const seatLimit = document.getElementById('eventSeatLimit').value;
+
+            if (!title || !description || !date || !time || !venue || !seatLimit) {
+                showAlert('createEventAlert', 'Please fill in all required fields', true);
+                return;
+            }
+
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('category', document.getElementById('eventCategory').value);
+            formData.append('date', date);
+            formData.append('time', time);
+            formData.append('venue', venue);
+            formData.append('eligibility', document.getElementById('eventEligibility').value || 'All students');
+            formData.append('seatLimit', parseInt(seatLimit));
+            
+            // Add team event data
+            const isTeamEvent = document.getElementById('isTeamEvent').checked;
+            formData.append('isTeamEvent', isTeamEvent);
+            
+            if (isTeamEvent) {
+                const teamSize = document.getElementById('teamSize').value;
+                if (!teamSize || teamSize < 2 || teamSize > 10) {
+                    showAlert('createEventAlert', 'Team size must be between 2 and 10', true);
+                    return;
+                }
+                formData.append('teamSize', parseInt(teamSize));
+            }
+            
+            // Add image file if selected
+            const imageFile = document.getElementById('eventImage').files[0];
+            if (imageFile) {
+                formData.append('eventImage', imageFile);
+            }
+
+            console.log('Event data to send (FormData)');
+
+            try {
+                console.log('Making API call to:', `${API_BASE}/events`);
+                
+                const response = await fetch(`${API_BASE}/events`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                        // Don't set Content-Type for FormData, let browser set it with boundary
+                    },
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response result:', result);
+                
+                if (response.ok) {
+                    showAlert('createEventAlert', 'Event created successfully!');
+                    // Clear form
+                    document.getElementById('eventTitle').value = '';
+                    document.getElementById('eventDescription').value = '';
+                    document.getElementById('eventDate').value = '';
+                    document.getElementById('eventTime').value = '';
+                    document.getElementById('eventVenue').value = '';
+                    document.getElementById('eventEligibility').value = 'All students';
+                    document.getElementById('eventSeatLimit').value = '';
+                    document.getElementById('eventImage').value = '';
+                    
+                    loadEvents(); // Refresh events
+                } else {
+                    showAlert('createEventAlert', result.message, true);
+                }
+            } catch (error) {
+                console.error('Create event error:', error);
+                showAlert('createEventAlert', 'Failed to create event. Server might be down.', true);
+            }
+        }
+
+        // Load Dashboard
+        async function loadDashboard() {
+            if (!authToken) return;
+
+            try {
+                if (currentUser.role === 'student') {
+                    // Load student dashboard
+                    document.getElementById('studentEventsSection').style.display = 'block';
+                    document.getElementById('organizerEventsSection').style.display = 'none';
+                    document.getElementById('registeredEventsLabel').textContent = 'My Registrations';
+                    
+                    const response = await fetch(`${API_BASE}/users/my-events`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        const myEvents = result.events;
+                        
+                        // Calculate stats based on event status
+                        const activeEvents = myEvents.filter(e => e.status === 'upcoming' || e.status === 'registration-closed');
+                        const pastEvents = myEvents.filter(e => e.status === 'completed');
+                        
+                        // Update stats
+                        document.getElementById('totalEvents').textContent = allEvents.length;
+                        document.getElementById('registeredEvents').textContent = myEvents.length;
+                        document.getElementById('upcomingEvents').textContent = activeEvents.length;
+                        document.getElementById('pastEvents').textContent = pastEvents.length;
+                        
+                        // Display registered events
+                        displayMyEvents(myEvents);
+                    }
+                } else if (currentUser.role === 'organizer' || currentUser.role === 'admin') {
+                    // Load organizer dashboard
+                    document.getElementById('studentEventsSection').style.display = 'none';
+                    document.getElementById('organizerEventsSection').style.display = 'block';
+                    document.getElementById('registeredEventsLabel').textContent = 'My Events';
+                    
+                    const response = await fetch(`${API_BASE}/users/my-organized-events`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        const myOrganizedEvents = result.events;
+                        
+                        // Calculate stats based on event status
+                        const activeEvents = myOrganizedEvents.filter(e => e.status === 'upcoming' || e.status === 'registration-closed');
+                        const pastEvents = myOrganizedEvents.filter(e => e.status === 'completed');
+                        
+                        // Update stats
+                        document.getElementById('totalEvents').textContent = allEvents.length;
+                        document.getElementById('registeredEvents').textContent = myOrganizedEvents.length;
+                        document.getElementById('upcomingEvents').textContent = activeEvents.length;
+                        document.getElementById('pastEvents').textContent = pastEvents.length;
+                        
+                        // Display organized events
+                        displayMyOrganizedEvents(myOrganizedEvents);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        // Display My Events (Student)
+        function displayMyEvents(events) {
+            const activeContainer = document.getElementById('myActiveEventsContainer');
+            const pastContainer = document.getElementById('myPastEventsContainer');
+            
+            // Separate active and past events
+            const activeEvents = events.filter(event => event.status === 'upcoming' || event.status === 'registration-closed');
+            const pastEvents = events.filter(event => event.status === 'completed');
+            
+            // Display active events
+            if (activeEvents.length === 0) {
+                activeContainer.innerHTML = '<p>You haven\'t registered for any active events.</p>';
+            } else {
+                activeContainer.innerHTML = activeEvents.map(event => {
+                    // Find user's team if it's a team event
+                    let teamInfo = '';
+                    let unregisterAction = `unregisterFromEvent('${event._id}')`;
+                    
+                    if (event.isTeamEvent && event.teams) {
+                        const userTeam = event.teams.find(team => 
+                            team.members.some(member => member._id === currentUser.id)
+                        );
+                        
+                        if (userTeam) {
+                            const isLeader = userTeam.teamLeader._id === currentUser.id;
+                            teamInfo = `<br>👫 Team: ${userTeam.teamName} ${isLeader ? '(Leader)' : '(Member)'}`;
+                            unregisterAction = `unregisterFromTeamEvent('${event._id}')`;
+                        }
+                    }
+                    
+                    return `
+                    <div class="event-card">
+                        <div class="event-category">${event.category}</div>
+                        <h3>${event.title}</h3>
+                        ${event.imageUrl ? `<img src="http://localhost:5000${event.imageUrl}" alt="${event.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin: 10px 0;">` : ''}
+                        <div class="event-meta">
+                            📅 ${new Date(event.date).toLocaleDateString()} at ${event.time}<br>
+                            📍 ${event.venue}<br>
+                            ${event.isTeamEvent ? `
+                                👥 ${event.teams ? event.teams.length : 0}/${event.seatLimit} teams registered<br>
+                                👫 Team Size: ${event.teamSize} members
+                            ` : `
+                                👥 ${event.registeredStudents.length}/${event.seatLimit} registered
+                            `}${teamInfo}<br>
+                            📊 Status: <span style="background: ${getStatusColor(event.status)}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${getStatusText(event.status)}</span>
+                        </div>
+                        <p>${event.description}</p>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-danger" onclick="${unregisterAction}">
+                                ${event.isTeamEvent ? 'Leave Team' : 'Unregister'}
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+            
+            // Display past events
+            if (pastEvents.length === 0) {
+                pastContainer.innerHTML = '<p>No past events yet.</p>';
+            } else {
+                pastContainer.innerHTML = pastEvents.map(event => {
+                    // Find user's team if it's a team event
+                    let teamInfo = '';
+                    
+                    if (event.isTeamEvent && event.teams) {
+                        const userTeam = event.teams.find(team => 
+                            team.members.some(member => member._id === currentUser.id)
+                        );
+                        
+                        if (userTeam) {
+                            const isLeader = userTeam.teamLeader._id === currentUser.id;
+                            teamInfo = `<br>👫 Team: ${userTeam.teamName} ${isLeader ? '(Leader)' : '(Member)'}`;
+                        }
+                    }
+                    
+                    return `
+                    <div class="event-card">
+                        <div class="event-category">${event.category}</div>
+                        <h3>${event.title}</h3>
+                        ${event.imageUrl ? `<img src="http://localhost:5000${event.imageUrl}" alt="${event.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin: 10px 0;">` : ''}
+                        <div class="event-meta">
+                            📅 ${new Date(event.date).toLocaleDateString()} at ${event.time}<br>
+                            📍 ${event.venue}<br>
+                            ${event.isTeamEvent ? `
+                                👥 ${event.teams ? event.teams.length : 0} teams participated<br>
+                                👫 Team Size: ${event.teamSize} members
+                            ` : `
+                                👥 ${event.registeredStudents.length}/${event.seatLimit} attended
+                            `}${teamInfo}<br>
+                            📊 Status: <span style="background: ${getStatusColor(event.status)}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${getStatusText(event.status)}</span>
+                        </div>
+                        <p>${event.description}</p>
+                        <div style="margin-top: 10px;">
+                            <button class="btn" onclick="showFeedbackForm('${event._id}')" style="background: #fd7e14;">
+                                Submit Feedback
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Display My Organized Events
+        function displayMyOrganizedEvents(events) {
+            const activeContainer = document.getElementById('myActiveOrganizedEventsContainer');
+            const pastContainer = document.getElementById('myPastOrganizedEventsContainer');
+            
+            // Separate active and past events
+            const activeEvents = events.filter(event => event.status === 'upcoming' || event.status === 'registration-closed');
+            const pastEvents = events.filter(event => event.status === 'completed');
+            
+            // Display active events
+            if (activeEvents.length === 0) {
+                activeContainer.innerHTML = '<p>You haven\'t created any active events yet.</p>';
+            } else {
+                activeContainer.innerHTML = activeEvents.map(event => generateOrganizerEventCard(event)).join('');
+            }
+            
+            // Display past events
+            if (pastEvents.length === 0) {
+                pastContainer.innerHTML = '<p>No completed events yet.</p>';
+            } else {
+                pastContainer.innerHTML = pastEvents.map(event => generateOrganizerEventCard(event)).join('');
+            }
+        }
+
+        // Generate organizer event card HTML
+        function generateOrganizerEventCard(event) {
+            return `
+                <div class="event-card">
+                    <div class="event-category">${event.category}</div>
+                    <h3>${event.title}</h3>
+                    ${event.imageUrl ? `<img src="http://localhost:5000${event.imageUrl}" alt="${event.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin: 10px 0;">` : ''}
+                    <div class="event-meta">
+                        📅 ${new Date(event.date).toLocaleDateString()} at ${event.time}<br>
+                        📍 ${event.venue}<br>
+                        👥 ${event.registeredStudents.length}/${event.seatLimit} ${event.status === 'completed' ? 'attended' : 'registered'}<br>
+                        🪑 ${event.seatLimit - event.registeredStudents.length} seats remaining<br>
+                        📊 Status: <span style="background: ${getStatusColor(event.status)}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${getStatusText(event.status)}</span><br>
+                        ✅ ${event.eligibility}
+                    </div>
+                    <p>${event.description}</p>
+                    <div style="margin-top: 10px;">
+                        ${event.status === 'upcoming' ? `
+                            <button class="btn" onclick="viewEventRegistrations('${event._id}')" style="background: #17a2b8; margin-right: 5px; margin-bottom: 5px;">
+                                View Registrations (${event.registeredStudents.length})
+                            </button>
+                            ${event.registrationOpen ? `
+                                <button class="btn" onclick="closeEventRegistration('${event._id}')" style="background: #ffc107; color: #000; margin-right: 5px; margin-bottom: 5px;">
+                                    Close Registration
+                                </button>
+                            ` : ''}
+                            <button class="btn" onclick="editEvent('${event._id}')" style="background: #28a745; margin-right: 5px; margin-bottom: 5px;">
+                                Edit Event
+                            </button>
+                            <button class="btn" onclick="markEventComplete('${event._id}')" style="background: #6f42c1; margin-right: 5px; margin-bottom: 5px;">
+                                Mark Complete
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteEvent('${event._id}')" style="margin-bottom: 5px;">
+                                Delete Event
+                            </button>
+                        ` : event.status === 'registration-closed' ? `
+                            <button class="btn" onclick="viewEventRegistrations('${event._id}')" style="background: #17a2b8; margin-right: 5px; margin-bottom: 5px;">
+                                View Registrations (${event.registeredStudents.length})
+                            </button>
+                            <button class="btn" onclick="markEventComplete('${event._id}')" style="background: #6f42c1; margin-right: 5px; margin-bottom: 5px;">
+                                Mark Complete
+                            </button>
+                        ` : event.status === 'completed' ? `
+                            <button class="btn" onclick="viewEventFeedback('${event._id}')" style="background: #fd7e14; margin-right: 5px; margin-bottom: 5px;">
+                                View Feedback
+                            </button>
+                            <button class="btn" onclick="viewEventRegistrations('${event._id}')" style="background: #17a2b8; margin-bottom: 5px;">
+                                View Attendees (${event.registeredStudents.length})
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Edit Event
+        function editEvent(eventId) {
+            const event = allEvents.find(e => e._id === eventId);
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            // Fill the edit form
+            document.getElementById('editEventId').value = event._id;
+            document.getElementById('editEventTitle').value = event.title;
+            document.getElementById('editEventDescription').value = event.description;
+            document.getElementById('editEventCategory').value = event.category;
+            document.getElementById('editEventDate').value = event.date.split('T')[0];
+            document.getElementById('editEventTime').value = event.time;
+            document.getElementById('editEventVenue').value = event.venue;
+            document.getElementById('editEventEligibility').value = event.eligibility;
+            document.getElementById('editEventSeatLimit').value = event.seatLimit;
+            // Note: File input can't be pre-filled for security reasons
+
+            // Show edit page
+            showPage('edit-event');
+        }
+
+        // Update Event
+        async function updateEvent() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const eventId = document.getElementById('editEventId').value;
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('title', document.getElementById('editEventTitle').value.trim());
+            formData.append('description', document.getElementById('editEventDescription').value.trim());
+            formData.append('category', document.getElementById('editEventCategory').value);
+            formData.append('date', document.getElementById('editEventDate').value);
+            formData.append('time', document.getElementById('editEventTime').value);
+            formData.append('venue', document.getElementById('editEventVenue').value.trim());
+            formData.append('eligibility', document.getElementById('editEventEligibility').value.trim());
+            formData.append('seatLimit', parseInt(document.getElementById('editEventSeatLimit').value));
+            
+            // Add image file if selected
+            const imageFile = document.getElementById('editEventImage').files[0];
+            if (imageFile) {
+                formData.append('eventImage', imageFile);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                        // Don't set Content-Type for FormData, let browser set it with boundary
+                    },
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('editEventAlert', 'Event updated successfully!');
+                    loadEvents(); // Refresh events
+                    setTimeout(() => showPage('dashboard'), 1500);
+                } else {
+                    showAlert('editEventAlert', result.message, true);
+                }
+            } catch (error) {
+                showAlert('editEventAlert', 'Failed to update event. Please try again.', true);
+            }
+        }
+
+        // Delete Event
+        async function deleteEvent(eventId) {
+            if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Event deleted successfully!');
+                    loadEvents(); // Refresh events
+                    loadDashboard(); // Refresh dashboard
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Failed to delete event. Please try again.');
+            }
+        }
+
+        // View Event Registrations
+        async function viewEventRegistrations(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/registrations`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayEventRegistrations(result.event, result.registrations);
+                    showPage('event-registrations');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Failed to load registrations. Please try again.');
+            }
+        }
+
+        // Display Event Registrations
+        function displayEventRegistrations(event, registrations) {
+            // Update page title
+            document.getElementById('registrationsEventTitle').textContent = `Registrations for "${event.title}"`;
+            
+            // Update stats
+            const statsContainer = document.getElementById('registrationsStats');
+            const remainingSeats = event.seatLimit - registrations.length;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${registrations.length}</div>
+                    <div class="stat-label">Registered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${remainingSeats}</div>
+                    <div class="stat-label">Remaining</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${event.seatLimit}</div>
+                    <div class="stat-label">Total Seats</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${Math.round((registrations.length / event.seatLimit) * 100)}%</div>
+                    <div class="stat-label">Filled</div>
+                </div>
+            `;
+            
+            // Update registrations list
+            const container = document.getElementById('registrationsContainer');
+            
+            if (registrations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No registrations yet.</p>';
+                return;
+            }
+            
+            // Group by department
+            const departmentGroups = registrations.reduce((groups, student) => {
+                const dept = student.department || 'Unknown';
+                if (!groups[dept]) groups[dept] = [];
+                groups[dept].push(student);
+                return groups;
+            }, {});
+            
+            container.innerHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Student ID</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Name</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Department</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Year</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Email</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Registered On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${registrations.map((student, index) => `
+                                <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">${student.studentId}</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; font-weight: 500;">${student.name}</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">
+                                        <span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">
+                                            ${student.department}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">${student.year}${student.year === 1 ? 'st' : student.year === 2 ? 'nd' : student.year === 3 ? 'rd' : 'th'} Year</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">${student.email}</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">${new Date(student.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h3>Department-wise Breakdown</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                        ${Object.entries(departmentGroups).map(([dept, students]) => `
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;">${dept}</h4>
+                                <p style="margin: 0; font-size: 1.2rem; font-weight: bold; color: #3498db;">${students.length} students</p>
+                                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #666;">
+                                    ${Math.round((students.length / registrations.length) * 100)}% of total
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper functions for event status
+        function getStatusColor(status) {
+            switch(status) {
+                case 'upcoming': return '#28a745';
+                case 'registration-closed': return '#ffc107';
+                case 'completed': return '#6c757d';
+                case 'cancelled': return '#dc3545';
+                default: return '#17a2b8';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'upcoming': return 'Open for Registration';
+                case 'registration-closed': return 'Registration Closed';
+                case 'completed': return 'Event Completed';
+                case 'cancelled': return 'Cancelled';
+                default: return 'Unknown';
+            }
+        }
+
+        // Close Event Registration
+        async function closeEventRegistration(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const event = allEvents.find(e => e._id === eventId);
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            const confirmMessage = `Are you sure you want to close registration for "${event.title}"?\n\n` +
+                                 `This will:\n` +
+                                 `• Stop accepting new registrations\n` +
+                                 `• Send confirmation emails to all ${event.registeredStudents.length} registered students\n` +
+                                 `• Move the event to "Registration Closed" status\n\n` +
+                                 `This action cannot be undone.`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/close-registration`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    loadEvents(); // Refresh events
+                    loadDashboard(); // Refresh dashboard
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Failed to close registration. Please try again.');
+            }
+        }
+
+        // Mark Event as Complete
+        async function markEventComplete(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const event = allEvents.find(e => e._id === eventId);
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            const confirmMessage = `Are you sure you want to mark "${event.title}" as completed?\n\n` +
+                                 `This will:\n` +
+                                 `• Move the event to "Past Events" section\n` +
+                                 `• Allow registered students to submit feedback\n` +
+                                 `• Enable you to view feedback analytics\n\n` +
+                                 `This action cannot be undone.`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/complete`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    loadEvents(); // Refresh events
+                    loadDashboard(); // Refresh dashboard
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Failed to mark event as complete. Please try again.');
+            }
+        }
+
+        // View Event Feedback
+        async function viewEventFeedback(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/feedback`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayEventFeedback(result.event, result.feedbackStats, result.feedback);
+                    showPage('event-feedback');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Failed to load feedback. Please try again.');
+            }
+        }
+
+        // Display Event Feedback
+        function displayEventFeedback(event, stats, feedback) {
+            // Update page title
+            document.getElementById('feedbackEventTitle').textContent = `Feedback for "${event.title}"`;
+            
+            // Update stats
+            const statsContainer = document.getElementById('feedbackStats');
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalFeedback}</div>
+                    <div class="stat-label">Total Feedback</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.averageRating}</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.responseRate}%</div>
+                    <div class="stat-label">Response Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${event.totalRegistrations}</div>
+                    <div class="stat-label">Total Attendees</div>
+                </div>
+            `;
+            
+            // Update feedback list
+            const container = document.getElementById('feedbackContainer');
+            
+            if (feedback.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No feedback submitted yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 30px;">
+                    <h3>Rating Distribution</h3>
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px;">
+                        ${[5,4,3,2,1].map(rating => `
+                            <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <div style="font-size: 1.2rem; margin-bottom: 5px;">${'⭐'.repeat(rating)}</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #3498db;">${stats.ratingDistribution[rating]}</div>
+                                <div style="font-size: 0.9rem; color: #666;">${rating} star${rating !== 1 ? 's' : ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <h3>Individual Feedback</h3>
+                <div style="margin-top: 15px;">
+                    ${feedback.map((fb, index) => `
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid ${getRatingColor(fb.rating)};">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <strong>${fb.student.name}</strong>
+                                    <span style="color: #666; margin-left: 10px;">(${fb.student.studentId})</span>
+                                    <div style="font-size: 0.9rem; color: #666; margin-top: 2px;">
+                                        ${fb.student.department} • ${fb.student.year}${fb.student.year === 1 ? 'st' : fb.student.year === 2 ? 'nd' : fb.student.year === 3 ? 'rd' : 'th'} Year
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="color: ${getRatingColor(fb.rating)}; font-size: 1.1rem; margin-bottom: 2px;">
+                                        ${'⭐'.repeat(fb.rating)}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #666;">
+                                        ${new Date(fb.submittedAt).toLocaleDateString()}
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="margin: 0; line-height: 1.5; color: #2c3e50;">"${fb.comment}"</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Helper function for rating colors
+        function getRatingColor(rating) {
+            switch(rating) {
+                case 5: return '#28a745';
+                case 4: return '#6f42c1';
+                case 3: return '#ffc107';
+                case 2: return '#fd7e14';
+                case 1: return '#dc3545';
+                default: return '#6c757d';
+            }
+        }
+
+        // Show feedback submission form
+        function showFeedbackForm(eventId) {
+            const event = allEvents.find(e => e._id === eventId);
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            document.getElementById('submitFeedbackEventTitle').textContent = `Feedback for "${event.title}"`;
+            document.getElementById('submitFeedbackEventDetails').innerHTML = `
+                <strong>${event.title}</strong><br>
+                📅 ${new Date(event.date).toLocaleDateString()} at ${event.time}<br>
+                📍 ${event.venue}
+            `;
+            
+            // Store event ID for submission
+            window.currentFeedbackEventId = eventId;
+            
+            // Clear form
+            document.querySelectorAll('input[name="rating"]').forEach(radio => radio.checked = false);
+            document.getElementById('feedbackComment').value = '';
+            
+            showPage('submit-feedback');
+        }
+
+        // Submit Event Feedback
+        async function submitEventFeedback() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const rating = document.querySelector('input[name="rating"]:checked')?.value;
+            const comment = document.getElementById('feedbackComment').value.trim();
+
+            if (!rating) {
+                showAlert('submitFeedbackAlert', 'Please select a rating', true);
+                return;
+            }
+
+            if (!comment) {
+                showAlert('submitFeedbackAlert', 'Please provide your feedback comment', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${window.currentFeedbackEventId}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ rating: parseInt(rating), comment })
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('submitFeedbackAlert', 'Thank you for your feedback!');
+                    setTimeout(() => showPage('dashboard'), 2000);
+                } else {
+                    showAlert('submitFeedbackAlert', result.message, true);
+                }
+            } catch (error) {
+                showAlert('submitFeedbackAlert', 'Failed to submit feedback. Please try again.', true);
+            }
+        }
+
+        // Team Registration Functions
+        let currentTeamEventId = null;
+        let currentTeamSize = 2;
+
+        function showTeamRegistrationForm(eventId, eventTitle, teamSize) {
+            currentTeamEventId = eventId;
+            currentTeamSize = teamSize;
+            
+            document.getElementById('teamModalEventTitle').textContent = `Register Team for: ${eventTitle}`;
+            document.getElementById('teamModalEventInfo').innerHTML = `
+                <strong>Team Size:</strong> ${teamSize} members (including you as team leader)<br>
+                <strong>Required:</strong> Email addresses of ${teamSize - 1} team member(s)
+            `;
+            
+            // Generate email input fields
+            const container = document.getElementById('memberEmailsContainer');
+            container.innerHTML = '';
+            
+            for (let i = 1; i < teamSize; i++) {
+                const div = document.createElement('div');
+                div.style.marginBottom = '10px';
+                div.innerHTML = `
+                    <input type="email" id="memberEmail${i}" placeholder="Team member ${i} email address" required 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                `;
+                container.appendChild(div);
+            }
+            
+            document.getElementById('teamRegistrationModal').style.display = 'block';
+        }
+
+        function closeTeamRegistrationModal() {
+            document.getElementById('teamRegistrationModal').style.display = 'none';
+            document.getElementById('teamName').value = '';
+            document.getElementById('teamRegistrationAlert').innerHTML = '';
+            currentTeamEventId = null;
+        }
+
+        async function submitTeamRegistration() {
+            if (!authToken) {
+                showAlert('teamRegistrationAlert', 'Please login first', true);
+                return;
+            }
+
+            const teamName = document.getElementById('teamName').value.trim();
+            if (!teamName) {
+                showAlert('teamRegistrationAlert', 'Please enter a team name', true);
+                return;
+            }
+
+            // Collect member emails
+            const memberEmails = [];
+            for (let i = 1; i < currentTeamSize; i++) {
+                const email = document.getElementById(`memberEmail${i}`).value.trim();
+                if (!email) {
+                    showAlert('teamRegistrationAlert', `Please enter email for team member ${i}`, true);
+                    return;
+                }
+                if (!isValidEmail(email)) {
+                    showAlert('teamRegistrationAlert', `Please enter a valid email for team member ${i}`, true);
+                    return;
+                }
+                memberEmails.push(email);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${currentTeamEventId}/register-team`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        teamName,
+                        memberEmails
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('teamRegistrationAlert', 'Team registered successfully!');
+                    setTimeout(() => {
+                        closeTeamRegistrationModal();
+                        loadEvents(); // Refresh events
+                    }, 1500);
+                } else {
+                    showAlert('teamRegistrationAlert', result.message, true);
+                }
+            } catch (error) {
+                showAlert('teamRegistrationAlert', 'Failed to register team. Please try again.', true);
+            }
+        }
+
+        async function unregisterFromTeamEvent(eventId) {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to leave this team and unregister from the event?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/events/${eventId}/unregister`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Successfully left the team and unregistered from event');
+                    loadEvents(); // Refresh events
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Failed to unregister. Please try again.');
+            }
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+    </script>
+</body>
+</html>
